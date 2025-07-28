@@ -13,26 +13,18 @@ public:
 
     int_type overflow(int_type c) override
     {
-        if (c == '\n')
-        {
-            Serial.println(lineBuffer.str().c_str());
-            lineBuffer.clear();
-            lineBuffer.str("");
-        }
-        else
-        {
-            lineBuffer << (char) c;
-        }
+        lineBuffer << (char) c;
 
         return c;
     }
 
     int_type sync() override
     {
-        Serial.print("Activated");
         Serial.print(lineBuffer.str().c_str());
         lineBuffer.clear();
         lineBuffer.str("");
+
+        return 0;
     }
 
 private:
