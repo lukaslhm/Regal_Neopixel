@@ -1,25 +1,32 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 
 #include <iomanip>
 
 #include <WiFi.h>
 #include <PubSubClient.h>
-// #include "Logger/logger.hpp"
 #include <logger.hpp>
+#include <string>
+#include <cstring>
 
+#include "mqttOStream.hpp"
 #include "uartOStream.hpp"
 #include "Constants.h"
 
-void mqttMsgArrivedCallback(char* topic, uint8_t* msg, unsigned int length)
+void mqttMsgArrivedCallback(char* initTopic, byte* initMsg, unsigned int initLength)
 {
-  Serial.println("New MQTT Message received");
+  std::string topic(initTopic);
+  unsigned int length = initLength;
+  byte msg[length];
+  std::memcpy(msg, initMsg, length);
+
   Logger logger(eLogLevel::DEBUG, "[MQTT]");
   logger.INFO << "Message Received!" << std::endl;
   logger.INFO << "Topic: " << topic << std::endl;
   logger.INFO << "Msg: ";
   for (int i = 0; i<length; i++)
   {
-    logger.INFO << msg[i];
+    logger.INFO << (char) msg[i];
   }
   logger.INFO << std::endl;
 }
@@ -79,6 +86,12 @@ void wifi_Setup()
   Logger logger(eLogLevel::DEBUG, "[WIFI]");
   logger.DEBUG << "Wifi Setup" << std::endl;
 
+  IPAddress local_IP(192, 168, 4, 10);
+  IPAddress gateway(192, 168, 4, 1);
+  IPAddress subnet(255, 255, 255, 0);
+
+  WiFi.config(local_IP, gateway, subnet);
+
   logger.INFO << "Connecting to WiFi \"" << WIFI_SSID << "\"" << std::flush;
   WiFi.begin(WIFI_SSID, WIFI_PWD);
 
@@ -103,6 +116,8 @@ void wifi_Setup()
     logger.INFO << "connected!" << std::endl;
     logger.INFO << "IP: " <<  (int) WiFi.localIP()[0] << '.' << (int) WiFi.localIP()[1] << '.' << (int) WiFi.localIP()[2] << '.' << (int) WiFi.localIP()[3] << std::endl;
   }
+
+  ArduinoOTA.begin();
 }
 
 void mqtt_setup()
@@ -127,14 +142,24 @@ void mqtt_setup()
 
   logMqttState(logger, mqttClient.state());
 
-  if (mqttClient.subscribe(MQTT_MODE_TOPIC))
+  if (mqttClient.subscribe(MQTT_TOPIC_MODE))
   {
-    logger.DEBUG << "Subscription to: " << MQTT_MODE_TOPIC << " Succeeded" << std::endl;
+    logger.DEBUG << "Subscription to: " << MQTT_TOPIC_MODE << " Succeeded" << std::endl;
   } else
   {
-    logger.ERROR << "Subscription to: " << MQTT_MODE_TOPIC << " Failed" << std::endl;
+    logger.ERROR << "Subscription to: " << MQTT_TOPIC_MODE << " Failed" << std::endl;
+  }
+  
+  if (mqttClient.subscribe(MQTT_TOPIC_INTENSITY))
+  {
+    logger.DEBUG << "Subscription to: " << MQTT_TOPIC_INTENSITY << " Succeeded" << std::endl;
+  } else
+  {
+    logger.ERROR << "Subscription to: " << MQTT_TOPIC_INTENSITY << " Failed" << std::endl;
   }
 
+  
+  Logger::addOutStream(&MQTT::mqttLog);
 
 }
 
@@ -151,10 +176,13 @@ void setup() {
 
   mqtt_setup();
 
+  logger.DEBUG << "MQTT Setup finished" << std::endl;
+
   
 }
 
 void loop() {
+  ArduinoOTA.handle();
   mqttClient.loop();
   delay(10);
 }
