@@ -5,10 +5,17 @@
 #define OUTPOST_IP "192.168.4.1"
 #define MQTT_TIMEOUT 50000
 
-#define MQTT_TOPIC_MODE "Regal_LED_Strip/Mode"
+#define MQTT_TOPIC_FOLDER "regalLedControl/#"
+
+#define MQTT_TOPIC_MODE "regalLedControl/selectedMode"
+
+#define MQTT_TOPIC_STATIC_COLOR_HUE "regalLedControl/mode/staticColor/hue"
+#define MQTT_TOPIC_STATIC_COLOR_SAT "regalLedControl/mode/staticColor/sat"
+#define MQTT_TOPIC_STATIC_COLOR_VAL "regalLedControl/mode/staticColor/val"
+
 #define MQTT_TOPIC_LOG "Regal_LED_Strip/Log"
 #define MQTT_TOPIC_INTENSITY "Regal_LED_Strip/Intensity"
-#define MQTT_TOPIC_COLOR_PICKER "Regal_LED_Strip/Color_Picker"
+#define MQTT_TOPIC_COLOR_PICKER "Regal_LED_Strip/Color_Picker" mqtt.0.regalLedControl.selectedMode
 
 enum class LED_Mode_Nr{
     off = 0,

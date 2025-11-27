@@ -104,7 +104,7 @@ void mqtt_setup()
 
   unsigned long start = millis();
 
-  while (!mqttClient.connect("Regal_LED_Strip"))
+  while (!mqttClient.connect("regalLedController"))
   {
     if (micros() % 1000000) logger.INFO << '.' << std::flush;
     if ((millis() - start) > MQTT_TIMEOUT)
@@ -118,30 +118,13 @@ void mqtt_setup()
 
   logMqttState(logger, mqttClient.state());
 
-  if (mqttClient.subscribe(MQTT_TOPIC_MODE))
+  if (mqttClient.subscribe(MQTT_TOPIC_FOLDER))
   {
-    logger.DEBUG << "Subscription to: " << MQTT_TOPIC_MODE << " Succeeded" << std::endl;
+    logger.DEBUG << "Subscription to MQTT Topics Succeeded" << std::endl;
   } else
   {
-    logger.ERROR << "Subscription to: " << MQTT_TOPIC_MODE << " Failed" << std::endl;
+    logger.ERROR << "Subscription to MQTT Topics Failed" << std::endl;
   }
-  
-  if (mqttClient.subscribe(MQTT_TOPIC_INTENSITY))
-  {
-    logger.DEBUG << "Subscription to: " << MQTT_TOPIC_INTENSITY << " Succeeded" << std::endl;
-  } else
-  {
-    logger.ERROR << "Subscription to: " << MQTT_TOPIC_INTENSITY << " Failed" << std::endl;
-  }
-
-  if (mqttClient.subscribe(MQTT_TOPIC_COLOR_PICKER))
-  {
-    logger.DEBUG << "Subscription to: " << MQTT_TOPIC_COLOR_PICKER << " Succeeded" << std::endl;
-  } else
-  {
-    logger.ERROR << "Subscription to: " << MQTT_TOPIC_COLOR_PICKER << " Failed" << std::endl;
-  }
-
   
   Logger::addOutStream(&MQTT::mqttLog);
 

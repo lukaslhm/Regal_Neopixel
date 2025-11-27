@@ -18,10 +18,11 @@
 #include "setup.hpp"
 #include "LED_Modes.hpp"
 
-bool LED_Mode_Changed = true;
-int LED_Active_Mode = 0;
+std::string LED_Active_Mode = "ledOff";
 float LED_Brightness = 0;
 CRGB colorPicker_Color = CRGB::Red;
+
+unsigned long lastMillis = millis();
 
 CRGB leds[NUM_LEDS];
 
@@ -33,27 +34,29 @@ void mqttMsgArrivedCallback(char* initTopic, byte* initMsg, unsigned int initLen
 
   Logger logger(eLogLevel::DEBUG, "[MQTT]");
 
+  logger.DEBUG << "Topic: " << topic << " , Msg: " << msg << std::endl;
+
   if (topic == MQTT_TOPIC_MODE)
   {
-    try
-    {
-      LED_Active_Mode = std::stoi(msg);
-      LED_Mode_Changed = true;
-      logger.INFO << "LED Mode changed to " << LED_Active_Mode << std::endl;
-    }
-    catch(const std::exception& e)
-    {
-      logger.ERROR << e.what() << std::endl;
-    }
-  } else if (topic == MQTT_TOPIC_COLOR_PICKER)
-  {
-    colorPicker_Color.r = strtoul(msg.substr(1, 2).c_str(), nullptr, 16);
-    colorPicker_Color.g = strtoul(msg.substr(3, 2).c_str(), nullptr, 16);
-    colorPicker_Color.b = strtoul(msg.substr(5, 2).c_str(), nullptr, 16);
-
-    logger.DEBUG << "MQTT Input: " << msg << " r: " << msg.substr(1, 2).c_str() << " g: " << msg.substr(3, 2).c_str() << " b: " << msg.substr(5, 2).c_str() << std::endl;
-    logger.DEBUG << "Color Picker Color changed to: " << colorPicker_Color.toString().c_str() << std::endl;
+    LED_Active_Mode = msg;
   }
+  else if (topic == MQTT_TOPIC_STATIC_COLOR_HUE)
+  {
+    LED_Mode::modeStaticColor.setHue(std::stoi(msg));
+  }
+  else if (topic == MQTT_TOPIC_STATIC_COLOR_SAT)
+  {
+    LED_Mode::modeStaticColor.setSat(std::stoi(msg));
+  }
+  else if (topic == MQTT_TOPIC_STATIC_COLOR_VAL)
+  {
+    LED_Mode::modeStaticColor.setVal(std::stoi(msg));
+  }
+  else
+  {
+    logger.WARN << "Unknown Topic Received: " << topic << " Msg: " << msg << std::endl;
+  }
+
 }
 
 WiFiClient espClient;
@@ -82,16 +85,21 @@ void loop() {
   ArduinoOTA.handle();
   mqttClient.loop();
 
-  switch(LED_Active_Mode)
-  {
-    case 0:
-      LED_Mode::off(leds, LED_Mode_Changed);
-      break;
-    case 1:
-      LED_Mode::staticColor(leds, colorPicker_Color, LED_Mode_Changed);
-      break;
+  unsigned int dt = millis() - lastMillis;
+  lastMillis += dt;
 
+  if (LED_Active_Mode == "ledOff")
+  {
+    LED_Mode::modeOff.update(dt);
   }
+  else if (LED_Active_Mode == "staticColor")
+  {
+    LED_Mode::modeStaticColor.update(dt);
+  }
+  // else if (LED_Active_Mode == "uniformRainbow")
+  // {
+  //   LED_Mode::modeUniformRainbow.update(dt);
+  // }
 
   FastLED.show();
   delay(30);

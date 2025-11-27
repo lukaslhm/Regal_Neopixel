@@ -2,6 +2,44 @@
 
 namespace LED_Mode
 {
-    void off(CRGB* leds, bool& modeChanged);
-    void staticColor(CRGB* leds, CRGB color, bool& modeChanged);
+    class generic
+    {
+    public:
+        virtual void update(uint16_t dt) = 0;
+    };
+
+    class off : public generic
+    {
+    public:
+        void update(uint16_t dt) override;
+    };
+
+    class staticColor : public generic
+    {
+    public:
+        void update(uint16_t dt) override;
+
+        void setHue(uint16_t hue);
+        void setSat(uint8_t sat);
+        void setVal(uint8_t val);
+
+    private:
+        CRGB color;
+    };
+
+    // class uniformRainbow : public generic
+    // {
+    // public:
+    //     void update(uint16_t dt) override;
+    
+    // private:
+    //     uint32_t huePerMilli = 0;
+    //     uint8_t sat = 0;
+    //     uint8_t val = 255;
+    // };
+
+
+    off modeOff;
+    staticColor modeStaticColor;
+    // uniformRainbow modeUniformRainbow;
 }
