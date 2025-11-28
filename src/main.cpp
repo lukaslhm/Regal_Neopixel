@@ -32,7 +32,7 @@ void mqttMsgArrivedCallback(char* initTopic, byte* initMsg, unsigned int initLen
   unsigned int length = initLength;
   std::string msg((char*) initMsg, length);
 
-  Logger logger(eLogLevel::DEBUG, "[MQTT]");
+  Logger logger(eLogLevel::INFO, "[MQTT]");
 
   logger.DEBUG << "Topic: " << topic << " , Msg: " << msg << std::endl;
 
@@ -51,6 +51,18 @@ void mqttMsgArrivedCallback(char* initTopic, byte* initMsg, unsigned int initLen
   else if (topic == MQTT_TOPIC_STATIC_COLOR_VAL)
   {
     LED_Mode::modeStaticColor.setVal(std::stoi(msg));
+  }
+  else if (topic == MQTT_TOPIC_UNIFORM_RAINBOW_PERIOD)
+  {
+    LED_Mode::modeUniformRainbow.setPeriod(std::stof(msg));
+  }
+  else if (topic == MQTT_TOPIC_UNIFORM_RAINBOW_SAT)
+  {
+    LED_Mode::modeUniformRainbow.setSat(std::stoi(msg));
+  }
+  else if (topic == MQTT_TOPIC_UNIFORM_RAINBOW_VAL)
+  {
+    LED_Mode::modeUniformRainbow.setVal(std::stoi(msg));
   }
   else
   {
@@ -96,10 +108,10 @@ void loop() {
   {
     LED_Mode::modeStaticColor.update(dt);
   }
-  // else if (LED_Active_Mode == "uniformRainbow")
-  // {
-  //   LED_Mode::modeUniformRainbow.update(dt);
-  // }
+  else if (LED_Active_Mode == "uniformRainbow")
+  {
+    LED_Mode::modeUniformRainbow.update(dt);
+  }
 
   FastLED.show();
   delay(30);

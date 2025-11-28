@@ -13,16 +13,17 @@
 #define MQTT_TOPIC_STATIC_COLOR_SAT "regalLedControl/mode/staticColor/sat"
 #define MQTT_TOPIC_STATIC_COLOR_VAL "regalLedControl/mode/staticColor/val"
 
+#define MQTT_TOPIC_UNIFORM_RAINBOW_PERIOD "regalLedControl/mode/uniformRainbow/period"
+#define MQTT_TOPIC_UNIFORM_RAINBOW_SAT "regalLedControl/mode/uniformRainbow/sat"
+#define MQTT_TOPIC_UNIFORM_RAINBOW_VAL "regalLedControl/mode/uniformRainbow/val"
+
 #define MQTT_TOPIC_LOG "Regal_LED_Strip/Log"
 #define MQTT_TOPIC_INTENSITY "Regal_LED_Strip/Intensity"
-#define MQTT_TOPIC_COLOR_PICKER "Regal_LED_Strip/Color_Picker" mqtt.0.regalLedControl.selectedMode
-
-enum class LED_Mode_Nr{
-    off = 0,
-    static_Color = 1
-};
+#define MQTT_TOPIC_COLOR_PICKER "Regal_LED_Strip/Color_Picker"
 
 #define LED_DATA_PIN 13
 #define NUM_LEDS 260
 
+#include <FastLED.h>
 
+extern CRGB leds[NUM_LEDS];
