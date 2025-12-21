@@ -13,7 +13,7 @@ extern PubSubClient mqttClient;
 
 void wifi_setup()
 {
-  Logger logger(eLogLevel::DEBUG, "[WIFI]");
+  Logger logger(LOG_LEVEL_WIFI_SETUP, "[WIFI]");
   logger.DEBUG << "Wifi Setup" << std::endl;
 
   IPAddress local_IP(192, 168, 4, 10);

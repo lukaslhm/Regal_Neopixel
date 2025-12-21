@@ -32,7 +32,7 @@ void mqttMsgArrivedCallback(char* initTopic, byte* initMsg, unsigned int initLen
   unsigned int length = initLength;
   std::string msg((char*) initMsg, length);
 
-  Logger logger(eLogLevel::INFO, "[MQTT]");
+  Logger logger(LOG_LEVEL_MQTT_MSG_CALLBACK, "[MQTT]");
 
   logger.DEBUG << "Topic: " << topic << " , Msg: " << msg << std::endl;
 
@@ -64,6 +64,22 @@ void mqttMsgArrivedCallback(char* initTopic, byte* initMsg, unsigned int initLen
   {
     LED_Mode::modeUniformRainbow.setVal(std::stoi(msg));
   }
+  else if (topic == MQTT_TOPIC_WAVE_RAINBOW_PERIOD)
+  {
+    LED_Mode::modeWaveRainbow.setPeriod(std::stof(msg));
+  }
+  else if (topic == MQTT_TOPIC_WAVE_RAINBOW_LAMBDA)
+  {
+    LED_Mode::modeWaveRainbow.setWaveLength(std::stof(msg));
+  }
+  else if (topic == MQTT_TOPIC_WAVE_RAINBOW_SAT)
+  {
+    LED_Mode::modeWaveRainbow.setSat(std::stoi(msg));
+  }
+  else if (topic == MQTT_TOPIC_WAVE_RAINBOW_VAL)
+  {
+    LED_Mode::modeWaveRainbow.setVal(std::stoi(msg));
+  }
   else
   {
     logger.WARN << "Unknown Topic Received: " << topic << " Msg: " << msg << std::endl;
@@ -75,7 +91,7 @@ WiFiClient espClient;
 PubSubClient mqttClient(OUTPOST_IP, 1883, mqttMsgArrivedCallback, espClient);
 
 void setup() {
-  Logger logger(eLogLevel::DEBUG, "[SETUP]");
+  Logger logger(LOG_LEVEL_SETUP, "[SETUP]");
   Logger::addOutStream(&UART0::uartOut);
   
   logger.INFO << "Booting..." << std::endl;
@@ -92,6 +108,10 @@ void setup() {
 
   
 }
+
+Logger loopLogger(LOG_LEVEL_MAIN_LOOP, "[loop]");
+
+unsigned long lastLoopLogging = 0;
 
 void loop() {
   ArduinoOTA.handle();
@@ -112,8 +132,32 @@ void loop() {
   {
     LED_Mode::modeUniformRainbow.update(dt);
   }
+  else if (LED_Active_Mode == "waveRainbow")
+  {
+    LED_Mode::modeWaveRainbow.update(dt);
+  }
+  else
+  {
+    if (millis() - lastLoopLogging > 1000)
+    {
+        loopLogger.WARN << "No Valid Mode Selected!, mode: " << LED_Active_Mode << std::endl;
+        lastLoopLogging = millis();
+    }    
+  }
 
   FastLED.show();
-  delay(30);
+  uint16_t mil = 30 - (millis() - lastMillis);
+  if (mil > 0)
+  {
+    delay(mil);
+  }
+  else
+  {
+    if(millis() - lastLoopLogging > 1000)
+    {
+        loopLogger.WARN << "Mil < 0, mil: " << std::to_string(mil) << std::endl;
+        lastLoopLogging = millis();
+    }
+  }
 }
 

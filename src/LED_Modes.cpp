@@ -6,11 +6,12 @@
 
 #include <FastLED.h>
 
-Logger logger(eLogLevel::DEBUG, "[LED MODE]");
+Logger modeLogger(LOG_LEVEL_LED_MODE, "[LED MODE]");
 
 LED_Mode::off LED_Mode::modeOff;
 LED_Mode::staticColor LED_Mode::modeStaticColor;
 LED_Mode::uniformRainbow LED_Mode::modeUniformRainbow;
+LED_Mode::waveRainbow LED_Mode::modeWaveRainbow;
 
 void LED_Mode::off::update(uint16_t dt)
 {
@@ -28,7 +29,7 @@ void LED_Mode::staticColor::setHue(uint16_t hue)
     CHSV temp = rgb2hsv_approximate(color);
     temp.h = h;
 
-    logger.DEBUG << "Set Hue to: " << std::to_string(h) << " from: " << std::to_string(hue) << std::endl;
+    modeLogger.DEBUG << "Set Hue to: " << std::to_string(h) << " from: " << std::to_string(hue) << std::endl;
 
     color = temp;
 }
@@ -39,7 +40,7 @@ void LED_Mode::staticColor::setSat(uint8_t sat)
     CHSV temp = rgb2hsv_approximate(color);
     temp.s = s;
 
-    logger.DEBUG << "Set Sat to: " << std::to_string(s) << " from: " << std::to_string(sat) << std::endl;
+    modeLogger.DEBUG << "Set Sat to: " << std::to_string(s) << " from: " << std::to_string(sat) << std::endl;
 
     color = temp;
 }
@@ -50,29 +51,31 @@ void LED_Mode::staticColor::setVal(uint8_t val)
     CHSV temp = rgb2hsv_approximate(color);
     temp.v = v;
 
-    logger.DEBUG << "Set Val to: " << std::to_string(v) << " from: " << std::to_string(val) << std::endl;
+    modeLogger.DEBUG << "Set Val to: " << std::to_string(v) << " from: " << std::to_string(val) << std::endl;
 
     color = temp;
 }
 
 void LED_Mode::uniformRainbow::update(uint16_t dt)
 {
-    color.h = (color.h + (uint8_t) (huePerSec * dt / 1000 + 0.5)) % 256;
+    time += (dt / 1000.0);
+    if (time > period) time -= period;
+    color.h = ((uint8_t) (time / period * 255 + 0.5)) % 256;
     fill_solid(leds, NUM_LEDS, color);
 }
 
 void LED_Mode::uniformRainbow::setPeriod(float t)
 {
-    huePerSec = 255/t + 0.5;
+    period = t;
 
-    logger.DEBUG << "Set Hue per Sec: " << std::to_string(huePerSec) << std::endl;
+    modeLogger.DEBUG << "Set period: " << std::to_string(period) << std::endl;
 }
 
 void LED_Mode::uniformRainbow::setSat(uint8_t sat)
 {
     uint8_t s = (sat / 100.0) * 255 + 0.5;
 
-    logger.DEBUG << "Set Sat: " << std::to_string(s) << std::endl;
+    modeLogger.DEBUG << "Set Sat: " << std::to_string(s) << std::endl;
 
     color.s = s;
 }
@@ -81,41 +84,48 @@ void LED_Mode::uniformRainbow::setVal(uint8_t val)
 {
     uint8_t v = (val / 100.0) * 255 + 0.5;
 
-    logger.DEBUG << "Set Val: " << std::to_string(v) << std::endl;
+    modeLogger.DEBUG << "Set Val: " << std::to_string(v) << std::endl;
 
     color.v = v;
 }
 
-/*
-void LED_Mode::off(CRGB* leds, bool& modeChanged)
+void LED_Mode::waveRainbow::setPeriod(float t)
 {
-    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    period = t;
 
-    if (modeChanged) modeChanged = false;
+    modeLogger.DEBUG << "Set Period: " << std::to_string(t) << std::endl;
 }
 
-void LED_Mode::staticColor(CRGB* leds, CRGB color, bool& modeChanged)
+void LED_Mode::waveRainbow::setSat(uint8_t s)
 {
-    fill_solid(leds, NUM_LEDS, color);
+    sat = (uint8_t) (s / 100.0) * 255 + 0.5;
 
-    if (modeChanged) modeChanged = false;
+    modeLogger.DEBUG << "Set Sat: " << std::to_string(sat) << std::endl;
 }
 
-void rainbow(CRGB* leds, float freq, bool& modeChanged)
+void LED_Mode::waveRainbow::setVal(uint8_t v)
 {
-    uint64_t huePerMicro = 256 * freq * 1e-6 + 0.5;
-    unsigned long lastTime = micros();
-    uint8_t hue = 0;
-    while (!modeChanged)
+    val = (uint8_t) (v / 100.0 * 255) + 0.5;
+    
+    modeLogger.DEBUG << "Set Val: " << std::to_string(val) << std::endl;
+}
+
+void LED_Mode::waveRainbow::setWaveLength(float lambda)
+{
+    lambdaStrip = lambda;
+
+    modeLogger.DEBUG << "Set Wave Length: " << std::to_string(lambdaStrip) << std::endl;
+}
+
+void LED_Mode::waveRainbow::update(uint16_t dt)
+{
+    time += dt;
+    if (time > period) time -= period;
+    Serial.println("update");
+    for (int i = 0; i > NUM_LEDS; i++)
     {
-        unsigned long dt = micros() - lastTime;
-        lastTime += dt;
-
-        hue = (hue + huePerMicro * dt) % 256;
-
-        fill_solid(leds, NUM_LEDS, CHSV(hue, 255, 255));
-
-        FastLED.show();
-        delay(30);
+        leds[i] = CHSV((uint8_t) 255/period * time - 255 / (lambdaStrip * NUM_LEDS) * i + 0.5, sat, val);
+        Serial.print("LED: "); Serial.print(i); Serial.print(", Val: r "); Serial.print(leds[i].r); Serial.print(" g "); Serial.print(leds[i].g); Serial.print(" b "); Serial.println(leds[i].b);
     }
-}*/
+}
+
