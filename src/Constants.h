@@ -29,6 +29,9 @@
 #define LED_DATA_PIN 13
 #define NUM_LEDS 260
 
+#define NUM_LEDS_LONG 134
+#define NUM_LEDS_SHORT 126
+
 #include <logger.hpp>
 
 #define LOG_LEVEL_MQTT_MSG_CALLBACK eLogLevel::DEBUG

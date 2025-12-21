@@ -98,7 +98,7 @@ void LED_Mode::waveRainbow::setPeriod(float t)
 
 void LED_Mode::waveRainbow::setSat(uint8_t s)
 {
-    sat = (uint8_t) (s / 100.0) * 255 + 0.5;
+    sat = (uint8_t) (s / 100.0 * 255) + 0.5;
 
     modeLogger.DEBUG << "Set Sat: " << std::to_string(sat) << std::endl;
 }
@@ -119,12 +119,16 @@ void LED_Mode::waveRainbow::setWaveLength(float lambda)
 
 void LED_Mode::waveRainbow::update(uint16_t dt)
 {
-    time += dt;
+    time += (dt / 1000.0);
     if (time > period) time -= period;
 
-    for (int i = 0; i < NUM_LEDS; i++)
+    for (int i = 0; i < NUM_LEDS_LONG; i++)
     {
-        leds[i] = CHSV((uint8_t) 255/period * time - 255 / (lambdaStrip * NUM_LEDS) * i + 0.5, sat, val);
+        leds[i + NUM_LEDS_SHORT] = CHSV((uint8_t) (255 / period * time) - (255 / (lambdaStrip * NUM_LEDS_LONG) * i) + 0.5, sat, val);
+    }
+    for (int i = 0; i < NUM_LEDS_SHORT; i++)
+    {
+        leds[(NUM_LEDS_SHORT - 1 - i)] = CHSV((uint8_t) (255 / period * time) - (255 / (lambdaStrip * NUM_LEDS_LONG) *  i) + 0.5, sat, val);
     }
 }
 
