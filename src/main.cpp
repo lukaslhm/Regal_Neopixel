@@ -146,7 +146,7 @@ void loop() {
   }
 
   FastLED.show();
-  uint16_t mil = 30 - (millis() - lastMillis);
+  signed long mil = 30 - (millis() - lastMillis);
   if (mil > 0)
   {
     delay(mil);

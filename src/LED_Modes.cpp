@@ -122,7 +122,7 @@ void LED_Mode::waveRainbow::update(uint16_t dt)
     time += dt;
     if (time > period) time -= period;
 
-    for (int i = 0; i > NUM_LEDS; i++)
+    for (int i = 0; i < NUM_LEDS; i++)
     {
         leds[i] = CHSV((uint8_t) 255/period * time - 255 / (lambdaStrip * NUM_LEDS) * i + 0.5, sat, val);
     }
